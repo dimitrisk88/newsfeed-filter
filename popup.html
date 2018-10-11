@@ -1,0 +1,388 @@
+<!doctype html>
+<html>
+	<head>
+		<title>fbFilter</title>
+		<style>
+			*,*:after,*:before {
+				box-sizing: border-box;
+				padding: 0;
+				margin: 0;
+			}
+			.switch {
+				margin: 1.5em 1em 1em;
+				position: absolute;
+				vertical-align: middle;
+				width: 5em;
+				height: 1.5em;
+				font-size: .5em;
+			}
+			.switch:focus {
+				outline: 
+			}
+			.switch label {
+				width: 100%;
+				height: 100%;
+				position: relative;
+				display: inline-block;
+			}
+			.switch input {
+				top: 0; 
+				right: 0; 
+				bottom: 0; 
+				left: 0;
+				opacity: 0;
+				z-index: 100;
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				cursor: pointer;
+			}
+			.switch label {
+				display: block;
+				width: 100%;
+				height: 100%;
+				background: #a5a39d;
+				border-radius: 1.25em;
+				box-shadow: inset 0 .1em .25em .025em rgba(0,0,0,0.2), 0 .025em 0 rgba(255,255,255,0.5);
+				transition: background .15s;
+			}
+			.switch label:after {
+				content: "";
+				position: absolute;
+				z-index: -1;
+				top: -.25em;
+				right: -.25em;
+				bottom: -.25em;
+				left: -.25em;
+				border-radius: inherit;
+				background: linear-gradient(#f2f2f2, #ababab);
+				box-shadow: 0 0 .3em rgba(0,0,0,0.3), 0 .025em .025em rgba(0,0,0,0.25);
+			}
+			.switch label:before {
+				content: "";
+				position: absolute;
+				z-index: -1;
+				top: -.5em;
+				right: -.5em;
+				bottom: -.5em;
+				left: -.5em;
+				border-radius: inherit;
+				background: linear-gradient(#e5e7e6, #eee);
+				box-shadow: 0 .025em 0 rgba(255,255,255,0.5);
+			}
+			.switch label i {
+				display: block;
+				height: 100%;
+				width: 60%;
+				border-radius: inherit;
+				position: absolute;
+				z-index: 2;
+				right: 40%;
+				top: 0;
+				transition: right, .15s;
+				background: linear-gradient(#f7f2f6, #b2ac9e);
+				box-shadow: inset 0 .025em 0 white, 0 0 .25em rgba(0,0,0,0.3), 0 .13em .13em rgba(0,0,0,0.2);
+			}
+			.switch label i:after {
+				content: "";
+				position: absolute;
+				left: 15%;
+				top: 25%;
+				width: 70%;
+				height: 50%;
+				background: linear-gradient(#cbc7bc, #d2cbc3);
+				border-radius: inherit;
+			}
+			.switch input:checked ~ label {
+				background: #4267b3;
+			}
+			.switch input:checked ~ label i {
+				right: -1%;
+			}
+			body {
+				width: 14em;
+				font-family: Tahoma, sans-serif;
+				font-size: 100%;
+				overflow: hidden;
+				height: auto;
+			}
+			.input > label {
+				color: #444;
+				width: 100%;
+				box-sizing: border-box;
+				display: inline;
+				cursor: pointer;
+				vertical-align: middle;
+				line-height: 110%;
+				padding: .5em 2em .5em 3.5em;
+				float: right;
+				user-select: none;
+				-moz-user-select: none;
+			}
+			.input {
+				height: auto;
+				position: relative;
+				box-shadow: inset 0 0 .3em #888;
+				background: rgba(0, 0, 150, .03);
+				transition: background .1s;
+			}
+			.input:hover {
+				background: rgba(153, 170, 187, .3);
+			}
+			textarea {
+				margin: 2%;
+				padding: .25em 2em .25em .25em;
+				width: 96%;
+				outline: none;
+				border: none;
+				border-radius: .5em;
+				box-shadow: inset 0 0 0.5em 1px #e0e5ea;
+				height: 2em;
+				resize: none;
+				overflow: hidden;
+			}
+			.clearfix:after {
+				content: "";
+				display: block;
+				clear: both;
+			}
+			#filters {
+				width: 100%;
+				max-height: 10em;
+				overflow: auto;
+			}
+			.filter {
+				border-radius: 1em;
+				background: #4267b3;
+				color: #fff;
+				margin: .2em;
+				padding: 0 .7em .2em;
+				text-align: center;
+				cursor: default;
+				user-select: none;
+				-moz-user-select: none;
+				clear: right;
+				position: relative;
+				vertical-align: middle;
+			}
+			.editing {
+				text-align: center;
+				vertical-align: middle;
+				position: absolute;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				border-radius: 1em;
+				background: rgba(0,0,0,.6);
+				opacity: 0;
+				transition: opacity .2s;
+				color: #fff;
+				z-index: 1;
+			}
+			.editing:hover {
+				cursor: pointer;
+				text-decoration: underline;
+			}
+			.filter > span:hover {
+				text-decoration: underline;
+				cursor: pointer;
+			}
+			.delete-filter {
+				border-radius: 9em;
+				width: 1.2em;
+				height: 1.2em;
+				background: #fff;
+				position: absolute;
+				top: 50%;
+				right: .3em;
+				margin-top: -.6em;
+				cursor: pointer;
+				transform: rotate(45deg);
+				transition: background .1s, opacity .1s;
+				opacity: 0;
+			}
+			.filter:hover :not(.editing) + .delete-filter {
+				opacity: 1;
+			}
+			.delete-filter:before {
+				content: "";
+				width: .2em;
+				height: .8em;
+				position: absolute;
+				background: #4267b3;
+				left: .5em;
+				top: .2em;
+			}
+			.delete-filter:after {
+				content: "";
+				width: .8em;
+				height: .2em;
+				position: absolute;
+				background: #4267b3;
+				left: .2em;
+				top: .5em;
+			}
+			.delete-filter:hover {
+				background: #ddd;
+			}
+			.delete-filter {
+				
+			}
+			#add-filter {
+				border-radius: 9em;
+				width: 1.5em;
+				height: 1.5em;
+				background: #4267b3;
+				position: absolute;
+				bottom: 6px;
+				right: 2px;
+				cursor: pointer;
+				transition: background .1s;
+			}
+			@media screen and (-webkit-min-device-pixel-ratio:0) and (min-resolution:.001dpcm) {
+				#add-filter {
+					margin-bottom: .25em;
+				} 
+			}
+			#add-filter:before {
+				content: "";
+				width: 4px;
+				height: 1em;
+				position: absolute;
+				background: #fff;
+				left: 10px;
+				top: 4px;
+			}
+			#add-filter:after {
+				content: "";
+				width: 1em;
+				height: 4px;
+				position: absolute;
+				background: #fff;
+				left: 4px;
+				top: 10px;
+			}
+			#add-filter.update-filter:before {
+				height: .7em;
+				transform: rotate(45deg);
+				top: .3em;
+				left: .65em;
+			}
+			#add-filter.update-filter:after {
+				width: .4em;
+				transform: rotate(45deg);
+				top: .65em;
+				left: 3px;
+			}
+			#add-filter:hover {
+				background: #358;
+			}
+			.tooltip, .tooltip-icon:hover .tooltip:hover {
+				opacity: 0;
+				z-index: -1;
+				transition: opacity .2s, z-index .2s;
+				position: absolute;
+				top: 120%;
+				right: .2em;
+				padding: .3em;
+				width: 10em;
+				background: #555;
+				color: #fff;
+				border-radius: .2em;
+				font-weight: normal;
+				line-height: 100%;
+			}
+			.tooltip-icon {
+				color: #555;
+				border: 3px solid #555;
+				font-weight: bold;
+				text-align: center;
+				width: 1.3em;
+				height: 1.3em;
+				line-height: .9em;
+				position: absolute;
+				top: calc(50% - .65em);
+				right: .2em;
+				border-radius: 9em;
+				cursor: pointer;
+			}
+			.tooltip-icon.last .tooltip {
+				bottom: 120%;
+				top: auto;
+			}
+			.tooltip-icon:hover .tooltip {
+				opacity: 1;
+				z-index: 99;
+			}
+		</style>
+		<meta charset="utf-8" />
+	</head>
+	<body>
+		<div>
+			<div class="input clearfix">
+				<div class="switch"><input type="checkbox" id="suggest"><label><i></i></label></div>
+				<label for="suggest">Suggested Posts</label>
+				<span class="tooltip-icon">?<span class="tooltip">Removes the most common type of promoted content between posts.</span></span>
+			</div>
+			<div class="input clearfix">
+				<div class="switch" style="margin-top:2.5em;"><input type="checkbox" id="stories"><label><i></i></label></div>
+				<label for="stories">Page Stories You May Like</label>
+				<span class="tooltip-icon">?<span class="tooltip">Removes a type of promoted content between posts.</span></span>
+			</div>
+			<div class="input clearfix">
+				<div class="switch"><input type="checkbox" id="sponsored"><label><i></i></label></div>
+				<label for="sponsored">Sponsored</label>
+				<span class="tooltip-icon">?<span class="tooltip">Removes sponsored content between posts.</span></span>
+			</div>
+			<!-- <div class="input clearfix"> -->
+				<!-- <div class="switch"><input type="checkbox" id="recommend"><label><i></i></label></div> -->
+				<!-- <label for="recommend">Recommended Posts</label> -->
+				<!-- <span class="tooltip-icon">?<span class="tooltip">Removes a type of promoted content between posts.</span></span> -->
+			<!-- </div> -->
+			<!-- <div class="input clearfix"> -->
+				<!-- <div class="switch" style="margin-top:2.5em;"><input type="checkbox" id="popular"><label><i></i></label></div> -->
+				<!-- <label for="popular">Popular Across Facebook</label> -->
+				<!-- <span class="tooltip-icon">?<span class="tooltip">Removes a type of promoted content between posts.</span></span> -->
+			<!-- </div> -->
+			<!-- <div class="input clearfix"> -->
+				<!-- <div class="switch"><input type="checkbox" id="tips"><label><i></i></label></div> -->
+				<!-- <label for="tips">Facebook Tips</label> -->
+				<!-- <span class="tooltip-icon">?<span class="tooltip">Removes facebook's occasional tips before and between posts.</span></span> -->
+			<!-- </div> -->
+			<div class="input clearfix">
+				<div class="switch" style="margin-top:2.5em;"><input type="checkbox" id="people"><label><i></i></label></div>
+				<label for="people">People You May Know</label>
+				<span class="tooltip-icon">?<span class="tooltip">Removes friends suggestions before and between posts.</span></span>
+			</div>
+			<!-- <div class="input clearfix"> -->
+				<!-- <div class="switch"><input type="checkbox" id="games"><label><i></i></label></div> -->
+				<!-- <label for="games">Chat Area</label> -->
+				<!-- <span class="tooltip-icon">?<span class="tooltip">Removes everything but your contacts in the chat column.</span></span> -->
+			<!-- </div> -->
+			<!-- <div class="input clearfix"> -->
+				<!-- <div class="switch"><input type="checkbox" id="businesses"><label><i></i></label></div> -->
+				<!-- <label for="businesses">Chat - Businesses For You</label> -->
+				<!-- <span class="tooltip-icon">?<span class="tooltip"></span></span> -->
+			<!-- </div> -->
+			<div class="input clearfix">
+				<div class="switch"><input type="checkbox" id="right"><label><i></i></label></div>
+				<label for="right">Right Column</label>
+				<span class="tooltip-icon last">?<span class="tooltip">Removes the column between posts and chat.</span></span>
+			</div>
+			<!-- <div class="input clearfix"> -->
+				<!-- <div class="switch"><input type="checkbox" id="filter"><label><i></i></label></div> -->
+				<!-- <label for="filter">Filter Posts</label> -->
+				<!-- <span class="tooltip-icon" style="top:.5em;">?<span class="tooltip">Removes posts that match keywords you specify in the field bellow.</span></span> -->
+				<!-- <div id="filters"></div> -->
+				<!-- <textarea id="edit-filter" placeholder="filter keywords" title="Matching will be made case and accent insensitive (ie ñ matches N), using only alphanumeric characters - the rest are considered spaces.&#10;To match a phrase, separate its words using the minus symbol (-). The phrase will be matched if all words are found in succession and order.&#10;To separate words and phrases use space. The post will be filtered out if they are all found exactly as written, in any order.&#10;To match a word with various prefixes and/or suffixes use the percentage symbol (%) before and/or after the word."></textarea> -->
+				<!-- <div id="add-filter" title="Add filter"></div> -->
+			<!-- </div> -->
+			<div class="input clearfix">
+				<label style="padding:.5em; font-size:10px; user-select:auto; -moz-user-select:auto; font-weight:bold;">Send your feedback and thoughts at <a href="emailto:koliosdace@gmail.com">koliosdace@gmail.com</a>.</label>
+			</div>
+		</div>
+		<script src="jquery-3.1.1.min.js"></script>
+		<script src="popup.js"></script>
+	</body>
+</html>
